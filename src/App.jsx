@@ -1,39 +1,36 @@
 import { useState, useEffect } from 'react';
 export default function App() {
+  const basePath = '/My-Portfolio';
   const projects = [
     {
       title: 'Современная кухня',
-      images: ['/kuhnia.jpg']
+      images: [`${basePath}/kuhnia.jpg`]
     },
     {
       title: 'Тёплая гостиная',
-      images: ['/Gostishka.jpg', '/Gost-4.jpg', '/Gost_3.jpg']
+      images: [`${basePath}/Gostishka.jpg`, `${basePath}/Gost-4.jpg`, `${basePath}/Gost_3.jpg`]
     },
     {
       title: 'Luxury ванная',
-      images: ['/bathroom.jpg', '/Vanna.jpg']
+      images: [`${basePath}/bathroom.jpg`, `${basePath}/Vanna.jpg`]
     },
     {
       title: 'Ресторанный интерьер',
-      images: ['/resto_1.jpg', '/resto_2.jpg', '/resto_3.jpg', '/resto_4.jpg', '/resto_5.jpg', '/resto_6.jpg']
-    },
-    { 
-      title: 'Минималистичный холл',
-      images: ['']
+      images: [`${basePath}/resto_1.jpg`, `${basePath}/resto_2.jpg`, `${basePath}/resto_3.jpg`, `${basePath}/resto_4.jpg`, `${basePath}/resto_5.jpg`, `${basePath}/resto_6.jpg`]
     },
     {
       title: 'Игровое пространство',
-      images: ['/Londsh_1.jpg',  '/Londsh_2.jpg', '/Londsh_3.jpg']
+      images: [`${basePath}/Londsh_1.jpg`, `${basePath}/Londsh_2.jpg`, `${basePath}/Londsh_3.jpg`]
     }
   ];
 
   const services = [
-    { title: 'Дизайн интерьера', bgImage: '' },
-    { title: 'Дизайн экстерьера', bgImage: '' },
-    { title: 'Ландшафтный дизайн', bgImage: '' },
-    { title: 'Чертежи электрики и проводки', bgImage: '' },
-    { title: 'Сантехнические проекты', bgImage: '' },
-    { title: 'Световые решения и расстановка света', bgImage: '' }
+    { title: 'Дизайн интерьера', description: 'Создание гармоничного пространства вашего дома или офиса. Подбираем материалы, цветовую палитру, мебель и освещение, превращая ваше видение в реальность.', bgImage: '' },
+    { title: 'Дизайн экстерьера', description: 'Проектирование фасадов и внешних пространств. Создаём привлекательный и функциональный облик здания, учитывая архитектурный стиль и окружающую среду.', bgImage: '' },
+    { title: 'Ландшафтный дизайн', description: 'Озеленение и благоустройство придомовой территории. Разработаем концепцию сада, подберём растения и создадим уютную зону отдыха.', bgImage: '' },
+    { title: 'Чертежи электрики и проводки', description: 'Профессиональная разработка схем электроснабжения. Безопасное и эффективное размещение розеток, выключателей и кабель-каналов с соблюдением всех норм.', bgImage: '' },
+    { title: 'Сантехнические проекты', description: 'Планирование систем водоснабжения и водоотведения. Оптимальное размещение труб, радиаторов и сантехнических приборов для максимального комфорта.', bgImage: '' },
+    { title: 'Световые решения и расстановка света', description: 'Создание идеального освещения для каждой зоны. Используем профессиональные источники света для атмосферы, функциональности и экономии энергии.', bgImage: '' }
   ];
 
   const reviews = [
@@ -49,10 +46,13 @@ export default function App() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [touchStartX, setTouchStartX] = useState(0);
   const [touchEndX, setTouchEndX] = useState(0);
+  const [imageZoom, setImageZoom] = useState(1);
+  const [lastTapTime, setLastTapTime] = useState(0);
 
   const openModal = (project, startIndex = 0) => {
     setCurrentProject(project);
     setCurrentImageIndex(startIndex);
+    setImageZoom(1);
     setIsModalOpen(true);
     document.body.style.overflow = 'hidden';
   };
@@ -60,39 +60,63 @@ export default function App() {
   const closeModal = () => {
     setIsModalOpen(false);
     setCurrentProject(null);
+    setImageZoom(1);
     document.body.style.overflow = 'auto';
+  };
+
+  const handleDoubleClickZoom = () => {
+    setImageZoom((prev) => (prev === 1 ? 2.5 : 1));
   };
 
   const prevImage = (e) => {
     e.stopPropagation();
     setCurrentImageIndex((prev) => (prev === 0 ? currentProject.images.length - 1 : prev - 1));
+    setImageZoom(1);
   };
 
   const nextImage = (e) => {
     e.stopPropagation();
     setCurrentImageIndex((prev) => (prev === currentProject.images.length - 1 ? 0 : prev + 1));
+    setImageZoom(1);
   };
 
     // Функции для свайпа (без использования события e)
   const onSwipeLeft = () => {
     if (currentProject && currentProject.images.length > 1) {
       setCurrentImageIndex((prev) => (prev === currentProject.images.length - 1 ? 0 : prev + 1));
+      setImageZoom(1);
     }
   };
   const onSwipeRight = () => {
     if (currentProject && currentProject.images.length > 1) {
       setCurrentImageIndex((prev) => (prev === 0 ? currentProject.images.length - 1 : prev - 1));
+      setImageZoom(1);
     }
   };
 
   // Обработчики касаний
   const handleTouchStart = (e) => {
     setTouchStartX(e.touches[0].clientX);
+    
+    // Определяем двойной тап
+    const now = Date.now();
+    if (now - lastTapTime < 300) {
+      // Это двойной тап - вызываем зум вместо проверки свайпа
+      handleDoubleClickZoom();
+    }
+    setLastTapTime(now);
   };
   const handleTouchMove = (e) => {
     setTouchEndX(e.touches[0].clientX);
   };
   const handleTouchEnd = () => {
+    // Не выполняем свайп если фото увеличено
+    if (imageZoom > 1) {
+      setTouchStartX(0);
+      setTouchEndX(0);
+      return;
+    }
+    
     if (touchStartX - touchEndX > 50) {
       onSwipeLeft();   // свайп влево
     } else if (touchEndX - touchStartX > 50) {
@@ -140,7 +164,7 @@ export default function App() {
         <div 
           className="absolute inset-0" 
           style={{ 
-            backgroundImage: "url('/NaFon.jpg')",
+            backgroundImage: `url('${basePath}/NaFon.jpg')`,  
             backgroundSize: "cover",
             backgroundPosition: "center",
             backgroundRepeat: "no-repeat"
@@ -176,7 +200,7 @@ export default function App() {
           <div className="relative">
             <div className="absolute -inset-4 border border-[#d6b98c]/40 rounded-[40px]" />
             <img 
-              src="/Aliha.jpg" 
+              src={`${basePath}/Aliha.jpg`}
               alt="Пеженков Алимухаммад Викторович" 
               className="relative rounded-[40px] shadow-2xl object-cover h-[650px] w-full" 
             />
@@ -237,7 +261,7 @@ export default function App() {
                 <div className="relative z-10">
                   <div className="w-12 h-12 rounded-full bg-[#d6b98c] mb-6" />
                   <h3 className="text-2xl font-light mb-4" style={{ color: service.bgImage ? 'white' : '#2b241f', textShadow: service.bgImage ? '1px 1px 3px black' : 'none' }}>{service.title}</h3>
-                  <p className="leading-relaxed" style={{ color: service.bgImage ? 'white' : '#6a625b', textShadow: service.bgImage ? '0.5px 0.5px 2px black' : 'none' }}>Современные решения, индивидуальный подход и продуманная реализация каждого элемента проекта.</p>
+                  <p className="leading-relaxed" style={{ color: service.bgImage ? 'white' : '#6a625b', textShadow: service.bgImage ? '0.5px 0.5px 2px black' : 'none' }}>{service.description}</p>
                 </div>
               </div>
             ))}
@@ -271,6 +295,7 @@ export default function App() {
           <div className="flex flex-col md:flex-row items-center justify-center gap-6">
             <a href="tel:+789187431811" className="px-8 py-5 rounded-full bg-[#1f1a17] text-white hover:scale-105 transition">8 (918) 743-18-11</a>
             <a href="https://t.me/allli_alli" className="px-8 py-5 rounded-full border border-[#1f1a17]/20 hover:bg-[#1f1a17] hover:text-white transition">Telegram: @allli_alli</a>
+            <a href="https://www.instagram.com/aliiii_27_10?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" className="px-8 py-5 rounded-full border border-[#1f1a17]/20 hover:bg-[#1f1a17] hover:text-white transition">Instagram: @aliiii_27_10</a>
           </div>
         </div>
       </section>
@@ -338,20 +363,35 @@ export default function App() {
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <img
-            src={currentProject.images[currentImageIndex]}
-            alt={currentProject.title}
+          {/* Контейнер только для фотографии */}
+          <div
             style={{
+              position: 'relative',
               width: '100%',
-              height: 'auto',
-              maxHeight: '80vh',
-              objectFit: 'contain',
-              borderRadius: '12px'
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          />
+          >
+            <img
+              src={currentProject.images[currentImageIndex]}
+              alt={currentProject.title}
+              style={{
+                width: '100%',
+                height: 'auto',
+                maxHeight: '80vh',
+                objectFit: 'contain',
+                borderRadius: '12px',
+                transform: `scale(${imageZoom})`,
+                transition: 'transform 0.3s ease',
+                cursor: imageZoom > 1 ? 'grab' : 'pointer'
+              }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onDoubleClick={handleDoubleClickZoom}
+            />
+          </div>
 
           <button
             onClick={closeModal}
