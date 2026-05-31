@@ -2,6 +2,7 @@
   "name": "my-portfolio",
   "private": true,
   "version": "0.0.0",
+  "homepage": "https://ivan3vvv-ai.github.io/My-Portfolio",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "build:css": "npx tailwindcss -i ./src/input.css -o ./src/index.css --watch",
-    "tailwind": "npx tailwindcss -i src/input.css -o src/index.css"
+    "tailwind": "npx tailwindcss -i src/input.css -o src/index.css",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
   },
   "dependencies": {
     "react": "^19.2.6",
