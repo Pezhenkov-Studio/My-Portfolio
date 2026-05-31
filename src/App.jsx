@@ -47,6 +47,7 @@ export default function App() {
   const [touchStartX, setTouchStartX] = useState(0);
   const [touchEndX, setTouchEndX] = useState(0);
   const [imageZoom, setImageZoom] = useState(1);
+  const [lastTapTime, setLastTapTime] = useState(0);
 
   const openModal = (project, startIndex = 0) => {
     setCurrentProject(project);
@@ -96,11 +97,26 @@ export default function App() {
   // Обработчики касаний
   const handleTouchStart = (e) => {
     setTouchStartX(e.touches[0].clientX);
+    
+    // Определяем двойной тап
+    const now = Date.now();
+    if (now - lastTapTime < 300) {
+      // Это двойной тап - вызываем зум вместо проверки свайпа
+      handleDoubleClickZoom();
+    }
+    setLastTapTime(now);
   };
   const handleTouchMove = (e) => {
     setTouchEndX(e.touches[0].clientX);
   };
   const handleTouchEnd = () => {
+    // Не выполняем свайп если фото увеличено
+    if (imageZoom > 1) {
+      setTouchStartX(0);
+      setTouchEndX(0);
+      return;
+    }
+    
     if (touchStartX - touchEndX > 50) {
       onSwipeLeft();   // свайп влево
     } else if (touchEndX - touchStartX > 50) {
@@ -347,24 +363,35 @@ export default function App() {
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <img
-            src={currentProject.images[currentImageIndex]}
-            alt={currentProject.title}
+          {/* Контейнер только для фотографии */}
+          <div
             style={{
+              position: 'relative',
               width: '100%',
-              height: 'auto',
-              maxHeight: '80vh',
-              objectFit: 'contain',
-              borderRadius: '12px',
-              transform: `scale(${imageZoom})`,
-              transition: 'transform 0.3s ease',
-              cursor: imageZoom > 1 ? 'grab' : 'pointer'
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            onDoubleClick={handleDoubleClickZoom}
-          />
+          >
+            <img
+              src={currentProject.images[currentImageIndex]}
+              alt={currentProject.title}
+              style={{
+                width: '100%',
+                height: 'auto',
+                maxHeight: '80vh',
+                objectFit: 'contain',
+                borderRadius: '12px',
+                transform: `scale(${imageZoom})`,
+                transition: 'transform 0.3s ease',
+                cursor: imageZoom > 1 ? 'grab' : 'pointer'
+              }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onDoubleClick={handleDoubleClickZoom}
+            />
+          </div>
 
           <button
             onClick={closeModal}
