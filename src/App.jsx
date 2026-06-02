@@ -370,7 +370,8 @@ export default function App() {
               width: '100%',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              touchAction: 'none'
             }}
           >
             <img
@@ -384,7 +385,9 @@ export default function App() {
                 borderRadius: '12px',
                 transform: `scale(${imageZoom})`,
                 transition: 'transform 0.3s ease',
-                cursor: imageZoom > 1 ? 'grab' : 'pointer'
+                cursor: imageZoom > 1 ? 'grab' : 'pointer',
+                touchAction: 'none',
+                userSelect: 'none'
               }}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
